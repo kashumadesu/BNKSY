@@ -1,1 +1,1 @@
-<p style="font-size: 100px; text-align: center;"><b>PLEASE CHECK THE SOURCE CODE</b></p>
+<h1 style="text-align: center;"><b>PLEASE CHECK THE SOURCE CODE</b></h1>
