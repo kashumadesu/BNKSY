@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <dirent.h>
 
 void clearScreen() {
 #ifdef _WIN32
@@ -14,6 +15,11 @@ struct user {
     char account[50];
     char password[50];
     float balance;
+    float loan;
+    char loan_type[20];
+    int employed;
+    float monthly_salary;
+    float bills_payment;
 };
 
 void displayMenu() {
@@ -23,7 +29,18 @@ void displayMenu() {
     printf("Press 3 for cash withdrawal\n");
     printf("Press 4 for online transfer\n");
     printf("Press 5 for password change\n");
-    printf("Press 6 to exit\n");
+    printf("Press 6 for loan application\n");
+    printf("Press 7 for bills payment\n");
+    printf("Press 8 to exit\n");
+    printf("--------------------------------------------\n");
+    printf("\nYour choice: ");
+}
+
+void adminMenu() {
+    printf("\n\n---------------- Admin Menu ----------------\n");
+    printf("Press 1 to view all user accounts\n");
+    printf("Press 2 to view a specific user account\n");
+    printf("Press 3 to exit admin menu\n");
     printf("--------------------------------------------\n");
     printf("\nYour choice: ");
 }
@@ -33,18 +50,19 @@ void mainMenu(struct user usr);
 int main() {
     struct user usr, usr1;
     FILE *fp;
-    char filename[50], pword[50];
+    char filename[50], pword[50], puser[50];
     int opt;
     char cont = 'y';
 
     do {
         printf("\n---------------------------------------------\n");
-        printf("       Welcome to Cyndicate,s Bank >:)\n");
+        printf("       Welcome to Cyndicate's Bank >:)\n");
         printf("---------------------------------------------\n");
-        printf(" Hello what do you want to do?\n\n");
+        printf(" Hello, what do you want to do?\n\n");
         printf("1. Register an account\n");
         printf("2. Login to an account\n");
-        printf("3. Exit\n\n");
+        printf("3. Admin login\n");
+        printf("4. Exit\n\n");
 
         printf("---------------------------------------------");
         printf("\n       Your choice: ");
@@ -62,6 +80,11 @@ int main() {
                 printf("Enter password: ");
                 scanf("%s", usr.password);
                 usr.balance = 0;
+                usr.loan = 0;
+                strcpy(usr.loan_type, "None");
+                usr.employed = 0;
+                usr.monthly_salary = 0.0;
+                usr.bills_payment = 0.0;
 
                 strcpy(filename, usr.account);
                 fp = fopen(strcat(filename, ".dat"), "w");
@@ -69,31 +92,29 @@ int main() {
                 fclose(fp);
 
                 printf("\n---------------------------------------------\n");
-				printf("      Account successfully registered\n");
-				printf("---------------------------------------------\n");
-				printf("Welcome to Cyndicate's Bank, %s!\n", usr.account);
-				printf("Thank you for choosing Cyndicate's Bank. \nEnjoy your banking experience!\n");
-				printf("---------------------------------------------\n\n");
+                printf("      Account successfully registered\n");
+                printf("---------------------------------------------\n");
+                printf("Welcome to Cyndicate's Bank, %s!\n", usr.account);
+                printf("Thank you for choosing Cyndicate's Bank. \nEnjoy your banking experience!\n");
+                printf("---------------------------------------------\n\n");
 
+                printf("Do you want to go to the main menu? (y/n): ");
+                scanf(" %c", &cont);
 
-                
-				printf("Do you want to go to the main menu? (y/n): ");
-				scanf(" %c", &cont);
-				
-				while (cont != 'y' && cont != 'n') {
-				    printf("Invalid input. Please enter 'y' or 'n': ");
-				    
-				    int c;
-				    while ((c = getchar()) != '\n' && c != EOF);
-				
-				    scanf(" %c", &cont);
-				}
-				
-				if (cont == 'y') {
-					clearScreen();
-				    mainMenu(usr);
-				}
-				break;
+                while (cont != 'y' && cont != 'n') {
+                    printf("Invalid input. Please enter 'y' or 'n': ");
+
+                    int c;
+                    while ((c = getchar()) != '\n' && c != EOF);
+
+                    scanf(" %c", &cont);
+                }
+
+                if (cont == 'y') {
+                    clearScreen();
+                    mainMenu(usr);
+                }
+                break;
 
             case 2:
                 clearScreen();
@@ -126,6 +147,95 @@ int main() {
                 break;
 
             case 3:
+                printf("\n---------------------------------------------\n");
+                printf("             Admin Login\n");
+                printf("---------------------------------------------\n");
+                printf("Admin username: ");
+                scanf("%s", puser);
+
+                if (strcmp(puser, "softboyleader123") == 0) {
+                    printf("Admin password: ");
+                    scanf("%s", pword);
+                    if (strcmp(pword, "butasSapuso123") == 0) {
+                        clearScreen();
+                        printf("\n\t\tWelcome Admin\n");
+                        int adminChoice;
+                        do {
+                            adminMenu();
+                            scanf("%d", &adminChoice);
+
+                            switch (adminChoice) {
+                                case 1:
+                                    printf("\nListing all user accounts:\n");
+                                    printf("--------------------------------------------\n");
+                                    DIR *dir;
+                                    struct dirent *ent;
+
+                                    if ((dir = opendir(".")) != NULL) {
+                                        while ((ent = readdir(dir)) != NULL) {
+                                            if (strstr(ent->d_name, ".dat") != NULL) {
+                                                fp = fopen(ent->d_name, "r");
+                                                fread(&usr1, sizeof(struct user), 1, fp);
+                                                fclose(fp);
+
+                                                printf("Account Number: %s\n", usr1.account);
+                                                printf("Balance: PHP %.2f\n", usr1.balance);
+                                                printf("Loan: PHP %.2f\n", usr1.loan);
+                                                printf("Loan Type: %s\n", usr1.loan_type);
+                                                printf("Employed: %d\n", usr1.employed);
+                                                printf("Monthly Salary: PHP %.2f\n", usr1.monthly_salary);
+                                                printf("Bills Payment: PHP %.2f\n", usr1.bills_payment);
+                                                printf("--------------------------------------------\n");
+                                            }
+                                        }
+                                        closedir(dir);
+                                    } else {
+                                        perror("Error opening directory");
+                                    }
+                                    break;
+
+                                case 2:
+                                    printf("Enter the account number to view: ");
+                                    scanf("%s", filename);
+                                    fp = fopen(strcat(filename, ".dat"), "r");
+
+                                    if (fp == NULL) {
+                                        printf("\nAccount number not registered");
+                                    } else {
+                                        fread(&usr1, sizeof(struct user), 1, fp);
+                                        fclose(fp);
+                                        printf("\nAccount Number: %s", usr1.account);
+                                        printf("\nBalance: PHP %.2f", usr1.balance);
+                                        printf("\nLoan: PHP %.2f", usr1.loan);
+                                        printf("\nLoan Type: %s", usr1.loan_type);
+                                        printf("\nEmployed: %d", usr1.employed);
+                                        printf("\nMonthly Salary: PHP %.2f", usr1.monthly_salary);
+                                        printf("\nBills Payment: PHP %.2f", usr1.bills_payment);
+                                    }
+                                    break;
+
+                                case 3:
+                                    printf("\nExiting admin menu.\n");
+                                    break;
+
+                                default:
+                                    printf("\nInvalid admin menu option.\n");
+                            }
+
+                            printf("\nPress 3 to exit admin menu, any other key to continue: ");
+                            scanf("%d", &adminChoice);
+                            clearScreen();
+                        } while (adminChoice != 3);
+
+                    } else {
+                        printf("\nInvalid admin password.\n");
+                    }
+                } else {
+                    printf("\nInvalid admin username.\n");
+                }
+                break;
+
+            case 4:
                 printf("\nExiting the program. Goodbye!\n");
                 break;
 
@@ -135,7 +245,7 @@ int main() {
 
         while ((getchar()) != '\n');
 
-    } while (opt != 3);
+    } while (opt != 4);
 
     return 0;
 }
@@ -146,7 +256,7 @@ void mainMenu(struct user usr) {
     float amount;
     FILE *fp;
     char filename[50];
-    struct user usr1; // Declare usr1 here
+    struct user usr1;
 
     do {
         displayMenu();
@@ -154,7 +264,14 @@ void mainMenu(struct user usr) {
 
         switch (choice) {
             case 1:
-                printf("\nYour current balance is PHP %.2f", usr.balance);
+                if (usr.loan > 0) {
+                    printf("\nYour current deposit balance is PHP %.2f", usr.balance);
+                    printf("\nYou have an outstanding loan balance of PHP %.2f", usr.loan);
+                    float netBalance = usr.balance - usr.loan;
+                    printf("\nYour net balance is PHP %.2f", netBalance);
+                } else {
+                    printf("\nYour current deposit balance is PHP %.2f", usr.balance);
+                }
                 break;
 
             case 2:
@@ -242,10 +359,92 @@ void mainMenu(struct user usr) {
                 break;
 
             case 6:
+                printf("\nSelect a loan type:\n");
+                printf("1. Car Loan\n");
+                printf("2. House Loan\n");
+                printf("3. Personal Loan\n");
+                printf("Your choice: ");
+                int loanTypeChoice;
+                scanf("%d", &loanTypeChoice);
+
+                switch (loanTypeChoice) {
+                    case 1:
+                        strcpy(usr.loan_type, "Car Loan");
+                        break;
+                    case 2:
+                        strcpy(usr.loan_type, "House Loan");
+                        break;
+                    case 3:
+                        strcpy(usr.loan_type, "Personal Loan");
+                        break;
+                    default:
+                        printf("\nInvalid option. Defaulting to 'None' loan type.");
+                        strcpy(usr.loan_type, "None");
+                }
+
+                printf("\nAre you employed? (1 for Yes, 0 for No): ");
+                scanf("%d", &usr.employed);
+
+                if (usr.employed) {
+                    printf("Enter your monthly salary: ");
+                    scanf("%f", &usr.monthly_salary);
+                } else {
+                    usr.monthly_salary = 0.0;
+                }
+
+                printf("\nEnter the loan amount: ");
+                while (scanf("%f", &amount) != 1 || amount <= 0) {
+                    clearScreen();
+                    printf("\n---------------------------------------------\n");
+                    printf("Invalid input. Please enter a valid loan amount.\n");
+                    printf("---------------------------------------------\n");
+                    printf("\nEnter the loan amount: ");
+                    while ((getchar()) != '\n');
+                }
+                usr.loan += amount;
+                usr.balance += amount;
+                fp = fopen(usr.account, "w");
+                fwrite(&usr, sizeof(struct user), 1, fp);
+                fclose(fp);
+                printf("\nLoan application successful. Your loan amount of PHP %.2f has been added to your account balance.\n", amount);
+                break;
+
+            case 7:
+                if (usr.loan > 0) {
+                    printf("\nYour current deposit balance is PHP %.2f", usr.balance);
+                    printf("\nYou have an outstanding loan balance of PHP %.2f", usr.loan);
+                    float netBalance = usr.balance - usr.loan;
+                    printf("\nYour net balance is PHP %.2f", netBalance);
+                    printf("\nEnter the amount to pay towards your loan: ");
+                    float paymentAmount;
+                    scanf("%f", &paymentAmount);
+
+                    if (paymentAmount <= 0) {
+                        printf("\nInvalid payment amount. Please enter a positive amount.");
+                    } else if (paymentAmount > netBalance) {
+                        printf("\nInsufficient net balance. You can't pay more than your net balance.");
+                    } else {
+                        usr.loan -= paymentAmount;
+                        usr.bills_payment += paymentAmount;
+                        usr.balance -= paymentAmount;
+                        fp = fopen(usr.account, "w");
+                        fwrite(&usr, sizeof(struct user), 1, fp);
+                        fclose(fp);
+                        printf("\nPayment of PHP %.2f towards your loan has been processed.", paymentAmount);
+                    }
+                } else {
+                    printf("\nYou don't have an outstanding loan balance.");
+                }
+                break;
+
+            case 8:
                 printf("\nAre you sure you want to exit? (y/n): ");
                 scanf(" %c", &cont);
                 if (cont == 'y') {
                     printf("\nExiting the program. Goodbye!\n");
+                    fp = fopen(usr.account, "w");
+                    fwrite(&usr, sizeof(struct user), 1, fp);
+                    fclose(fp);
                     exit(0);
                 }
                 break;
