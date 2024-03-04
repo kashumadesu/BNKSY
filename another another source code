@@ -1,0 +1,367 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+void clearScreen() {
+#ifdef _WIN32
+    system("cls");
+#else
+    printf("\033c");
+#endif
+}
+
+struct user {
+    char account[50];
+    char password[50];
+    float balance;
+    float loan;
+    char loan_type[20];
+    int employed;
+    float monthly_salary;
+    float bills_payment; 
+};
+
+void displayMenu() {
+    printf("\n\n------------------- Menu -------------------\n");
+    printf("Press 1 for balance inquiry\n");
+    printf("Press 2 for depositing cash\n");
+    printf("Press 3 for cash withdrawal\n");
+    printf("Press 4 for online transfer\n");
+    printf("Press 5 for password change\n");
+    printf("Press 6 for loan application\n");
+    printf("Press 7 for bills payment\n");
+    printf("Press 8 to exit\n");
+    printf("--------------------------------------------\n");
+    printf("\nYour choice: ");
+}
+
+void mainMenu(struct user usr);
+
+int main() {
+    struct user usr, usr1;
+    FILE *fp;
+    char filename[50], pword[50];
+    int opt;
+    char cont = 'y';
+
+    do {
+        printf("\n---------------------------------------------\n");
+        printf("       Welcome to Cyndicate,s Bank >:)\n");
+        printf("---------------------------------------------\n");
+        printf(" Hello what do you want to do?\n\n");
+        printf("1. Register an account\n");
+        printf("2. Login to an account\n");
+        printf("3. Exit\n\n");
+
+        printf("---------------------------------------------");
+        printf("\n       Your choice: ");
+        scanf("%d", &opt);
+        clearScreen();
+
+        switch (opt) {
+            case 1:
+                clearScreen();
+                printf("\n---------------------------------------------\n");
+                printf("            Register an Account\n");
+                printf("---------------------------------------------\n");
+                printf("Enter account number: ");
+                scanf("%s", usr.account);
+                printf("Enter password: ");
+                scanf("%s", usr.password);
+                usr.balance = 0;
+                usr.loan = 0;
+                strcpy(usr.loan_type, "None");
+                usr.employed = 0;
+                usr.monthly_salary = 0.0;
+                usr.bills_payment = 0.0;
+
+                strcpy(filename, usr.account);
+                fp = fopen(strcat(filename, ".dat"), "w");
+                fwrite(&usr, sizeof(struct user), 1, fp);
+                fclose(fp);
+
+                printf("\n---------------------------------------------\n");
+                printf("      Account successfully registered\n");
+                printf("---------------------------------------------\n");
+                printf("Welcome to Cyndicate's Bank, %s!\n", usr.account);
+                printf("Thank you for choosing Cyndicate's Bank. \nEnjoy your banking experience!\n");
+                printf("---------------------------------------------\n\n");
+
+                printf("Do you want to go to the main menu? (y/n): ");
+                scanf(" %c", &cont);
+
+                while (cont != 'y' && cont != 'n') {
+                    printf("Invalid input. Please enter 'y' or 'n': ");
+
+                    int c;
+                    while ((c = getchar()) != '\n' && c != EOF);
+
+                    scanf(" %c", &cont);
+                }
+
+                if (cont == 'y') {
+                    clearScreen();
+                    mainMenu(usr);
+                }
+                break;
+
+            case 2:
+                clearScreen();
+                printf("\n---------------------------------------------\n");
+                printf("             Login to an Account\n");
+                printf("---------------------------------------------\n");
+                printf("Account number: ");
+                scanf("%s", usr.account);
+                printf("Password: ");
+                scanf("%s", pword);
+
+                strcpy(filename, usr.account);
+                fp = fopen(strcat(filename, ".dat"), "r");
+
+                if (fp == NULL) {
+                    printf("\nAccount number not registered");
+                } else {
+                    fread(&usr, sizeof(struct user), 1, fp);
+                    fclose(fp);
+
+                    if (!strcmp(pword, usr.password)) {
+                        clearScreen();
+                        printf("\n\t\tWelcome %s", usr.account);
+
+                        mainMenu(usr);
+                    } else {
+                        printf("\nInvalid password");
+                    }
+                }
+                break;
+
+            case 3:
+                printf("\nExiting the program. Goodbye!\n");
+                break;
+
+            default:
+                printf("\nInvalid option. Please choose again.\n");
+        }
+
+        while ((getchar()) != '\n');
+
+    } while (opt != 3);
+
+    return 0;
+}
+
+void mainMenu(struct user usr) {
+    int choice;
+    char cont = 'y';
+    float amount;
+    FILE *fp;
+    char filename[50];
+    struct user usr1; 
+
+    do {
+        displayMenu();
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                if (usr.loan > 0) {
+                    printf("\nYour current deposit balance is PHP %.2f", usr.balance);
+                    printf("\nYou have an outstanding loan balance of PHP %.2f", usr.loan);
+                    float netBalance = usr.balance - usr.loan;
+                    printf("\nYour net balance is PHP %.2f", netBalance);
+                } else {
+                    printf("\nYour current deposit balance is PHP %.2f", usr.balance);
+                }
+                break;
+
+            case 2:
+                printf("\nEnter the amount: ");
+                while (scanf("%f", &amount) != 1) {
+                    clearScreen();
+                    printf("\n---------------------------------------------\n");
+                    printf("Invalid input. Please enter a valid amount.\n");
+                    printf("---------------------------------------------\n");
+                    printf("\nEnter the amount: ");
+                    while ((getchar()) != '\n');
+                }
+                usr.balance += amount;
+                fp = fopen(usr.account, "w");
+                fwrite(&usr, sizeof(struct user), 1, fp);
+                fclose(fp);
+                printf("\nSuccessfully deposited.");
+                break;
+
+            case 3:
+                printf("\nEnter the amount to withdraw: ");
+                while (scanf("%f", &amount) != 1) {
+                    clearScreen();
+                    printf("\n---------------------------------------------\n");
+                    printf("Invalid input. Please enter a valid amount.\n");
+                    printf("---------------------------------------------\n");
+                    printf("\nEnter the amount to withdraw: ");
+                    while ((getchar()) != '\n');
+                }
+                if (amount > usr.balance) {
+                    printf("\nInsufficient balance");
+                } else {
+                    usr.balance -= amount;
+                    fp = fopen(usr.account, "w");
+                    fwrite(&usr, sizeof(struct user), 1, fp);
+                    fclose(fp);
+                    printf("\nYou have withdrawn PHP %.2f", amount);
+                }
+                break;
+
+            case 4:
+                printf("\nEnter the account number to transfer the balance:\t");
+                scanf("%s", usr1.account);
+
+                strcpy(filename, usr1.account);
+                fp = fopen(strcat(filename, ".dat"), "r");
+
+                if (fp == NULL) {
+                    printf("\nAccount number not registered");
+                } else {
+                    fread(&usr1, sizeof(struct user), 1, fp);
+                    fclose(fp);
+
+                    printf("\nEnter the amount to transfer:\t");
+                    scanf("%f", &amount);
+
+                    if (amount > usr.balance) {
+                        printf("\nInsufficient balance");
+                    } else {
+                        usr1.balance += amount;
+
+                        fp = fopen(filename, "w");
+                        fwrite(&usr1, sizeof(struct user), 1, fp);
+                        fclose(fp);
+
+                        printf("\nYou have successfully transferred PHP %.2f to %s", amount, usr1.account);
+
+                        strcpy(filename, usr.account);
+                        fp = fopen(strcat(filename, ".dat"), "w");
+
+                        usr.balance -= amount;
+                        fwrite(&usr, sizeof(struct user), 1, fp);
+                        fclose(fp);
+                    }
+                }
+                break;
+
+            case 5:
+                printf("\nPlease enter your new password:\t");
+                scanf("%s", usr.password);
+                fp = fopen(usr.account, "w");
+                fwrite(&usr, sizeof(struct user), 1, fp);
+                fclose(fp);
+                printf("\nPassword successfully changed");
+                break;
+
+            case 6:
+                printf("\nSelect a loan type:\n");
+                printf("1. Car Loan\n");
+                printf("2. House Loan\n");
+                printf("3. Personal Loan\n");
+                printf("Your choice: ");
+                int loanTypeChoice;
+                scanf("%d", &loanTypeChoice);
+
+                switch (loanTypeChoice) {
+                    case 1:
+                        strcpy(usr.loan_type, "Car Loan");
+                        break;
+                    case 2:
+                        strcpy(usr.loan_type, "House Loan");
+                        break;
+                    case 3:
+                        strcpy(usr.loan_type, "Personal Loan");
+                        break;
+                    default:
+                        printf("\nInvalid option. Defaulting to 'None' loan type.");
+                        strcpy(usr.loan_type, "None");
+                }
+
+                printf("\nAre you employed? (1 for Yes, 0 for No): ");
+                scanf("%d", &usr.employed);
+
+                if (usr.employed) {
+                    printf("Enter your monthly salary: ");
+                    scanf("%f", &usr.monthly_salary);
+                } else {
+                    usr.monthly_salary = 0.0;
+                }
+
+                printf("\nEnter the loan amount: ");
+                while (scanf("%f", &amount) != 1 || amount <= 0) {
+                    clearScreen();
+                    printf("\n---------------------------------------------\n");
+                    printf("Invalid input. Please enter a valid loan amount.\n");
+                    printf("---------------------------------------------\n");
+                    printf("\nEnter the loan amount: ");
+                    while ((getchar()) != '\n');
+                }
+                usr.loan += amount;
+                usr.balance += amount;
+                fp = fopen(usr.account, "w");
+                fwrite(&usr, sizeof(struct user), 1, fp);
+                fclose(fp);
+                printf("\nLoan application successful. Your loan amount of PHP %.2f has been added to your account balance.\n", amount);
+                break;
+
+            case 7:
+                if (usr.loan > 0) {
+                    printf("\nYour current deposit balance is PHP %.2f", usr.balance);
+                    printf("\nYou have an outstanding loan balance of PHP %.2f", usr.loan);
+                    float netBalance = usr.balance - usr.loan;
+                    printf("\nYour net balance is PHP %.2f", netBalance);
+                    printf("\nEnter the amount to pay towards your loan: ");
+                    float paymentAmount;
+                    scanf("%f", &paymentAmount);
+
+                    if (paymentAmount <= 0) {
+                        printf("\nInvalid payment amount. Please enter a positive amount.");
+                    } else if (paymentAmount > netBalance) {
+                        printf("\nInsufficient net balance. You can't pay more than your net balance.");
+                    } else {
+                        usr.loan -= paymentAmount;
+                        usr.bills_payment += paymentAmount;
+                        usr.balance -= paymentAmount;  
+                        fp = fopen(usr.account, "w");
+                        fwrite(&usr, sizeof(struct user), 1, fp);
+                        fclose(fp);
+                        printf("\nPayment of PHP %.2f towards your loan has been processed.", paymentAmount);
+                    }
+                } else {
+                    printf("\nYou don't have an outstanding loan balance.");
+                }
+                break;
+
+            case 8:
+                printf("\nAre you sure you want to exit? (y/n): ");
+                scanf(" %c", &cont);
+                if (cont == 'y') {
+                    printf("\nExiting the program. Goodbye!\n");
+                    fp = fopen(usr.account, "w");
+                    fwrite(&usr, sizeof(struct user), 1, fp);
+                    fclose(fp);
+                    exit(0);
+                }
+                break;
+
+            default:
+                printf("\nInvalid option");
+        }
+
+        printf("\nDo you want to continue the transaction [y/n]: ");
+        scanf(" %c", &cont);
+
+        while (cont != 'y' && cont != 'n') {
+            printf("\nInvalid input. Please enter [y or n]: ");
+            while ((getchar()) != '\n');
+            scanf(" %c", &cont);
+        }
+
+        clearScreen();
+    } while (cont == 'y');
+}
